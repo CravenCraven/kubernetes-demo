@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pg-persistent
+  labels:
+    app: pg-persistent
+spec:
+  replicas: 1
+  # Recreate, not RollingUpdate. A ReadWriteOnce volume can only attach to one
+  # pod at a time, so the old pod must release it before the new one can mount.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pg-persistent
+  template:
+    metadata:
+      labels:
+        app: pg-persistent
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_PASSWORD
+              value: labpass
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        # A claim on real storage that outlives the pod.
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: pg-data

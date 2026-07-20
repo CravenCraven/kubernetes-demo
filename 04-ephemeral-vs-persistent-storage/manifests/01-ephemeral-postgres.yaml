@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pg-ephemeral
+  labels:
+    app: pg-ephemeral
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pg-ephemeral
+  template:
+    metadata:
+      labels:
+        app: pg-ephemeral
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_PASSWORD
+              value: labpass
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        # emptyDir lives and dies with the pod.
+        # Every new pod gets an empty dir, so Postgres re-runs initdb from scratch.
+        - name: pgdata
+          emptyDir: {}
